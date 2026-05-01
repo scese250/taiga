@@ -57,45 +57,38 @@ const AnimeListProxyModelFilter& AnimeListProxyModel::filters() const {
 }
 
 void AnimeListProxyModel::setFilters(const AnimeListProxyModelFilter& filters) {
-  beginFilterChange();
   m_filter = filters;
-  endFilterChange(QSortFilterProxyModel::Direction::Rows);
+  invalidateRowsFilter();
 }
 
 void AnimeListProxyModel::setYearFilter(std::optional<int> year) {
-  beginFilterChange();
   m_filter.year = year;
-  endFilterChange(QSortFilterProxyModel::Direction::Rows);
+  invalidateRowsFilter();
 }
 
 void AnimeListProxyModel::setSeasonFilter(std::optional<int> season) {
-  beginFilterChange();
   m_filter.season = season;
-  endFilterChange(QSortFilterProxyModel::Direction::Rows);
+  invalidateRowsFilter();
 }
 
 void AnimeListProxyModel::setTypeFilter(std::optional<int> type) {
-  beginFilterChange();
   m_filter.type = type;
-  endFilterChange(QSortFilterProxyModel::Direction::Rows);
+  invalidateRowsFilter();
 }
 
 void AnimeListProxyModel::setStatusFilter(std::optional<int> status) {
-  beginFilterChange();
   m_filter.status = status;
-  endFilterChange(QSortFilterProxyModel::Direction::Rows);
+  invalidateRowsFilter();
 }
 
 void AnimeListProxyModel::setListStatusFilter(AnimeListStatusFilter filter) {
-  beginFilterChange();
   m_filter.listStatus = filter;
-  endFilterChange(QSortFilterProxyModel::Direction::Rows);
+  invalidateRowsFilter();
 }
 
 void AnimeListProxyModel::setTextFilter(const QString& text) {
-  beginFilterChange();
   m_filter.text = text;
-  endFilterChange(QSortFilterProxyModel::Direction::Rows);
+  invalidateRowsFilter();
 }
 
 bool AnimeListProxyModel::filterAcceptsRow(int row, const QModelIndex& parent) const {
