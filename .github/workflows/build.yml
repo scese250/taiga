@@ -44,7 +44,7 @@ jobs:
         run: cmake --build build/msvc-x64 --config RelWithDebInfo --target taiga
 
       - name: Deploy Qt dependencies
-        run: windeployqt --release bin/RelWithDebInfo/Taiga.exe
+        run: windeployqt --release --compiler-runtime bin/RelWithDebInfo/Taiga.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
