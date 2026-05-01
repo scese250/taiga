@@ -38,14 +38,13 @@ jobs:
       - name: Configure CMake
         run: cmake --preset msvc-x64
         env:
-          QTDIR: ${{ env.Qt6_DIR }}
+          QTDIR: ${{ env.QT_ROOT_DIR }}
 
       - name: Build
         run: cmake --build build/msvc-x64 --config RelWithDebInfo --target taiga
 
       - name: Deploy Qt dependencies
-        run: |
-          & "$env:Qt6_DIR/bin/windeployqt.exe" --release bin/RelWithDebInfo/Taiga.exe
+        run: windeployqt --release bin/RelWithDebInfo/Taiga.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
