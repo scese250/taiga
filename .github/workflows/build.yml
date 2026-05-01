@@ -1,0 +1,55 @@
+name: Build Taiga
+
+on:
+  push:
+    branches: [ develop, master, main ]
+  pull_request:
+    branches: [ develop, master, main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.9.*'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2022_64'
+          modules: 'qtimageformats'
+          cache: true
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Install Ninja
+        run: choco install ninja -y
+
+      - name: Configure CMake
+        run: cmake --preset msvc-x64
+        env:
+          QTDIR: ${{ env.Qt6_DIR }}
+
+      - name: Build
+        run: cmake --build build/msvc-x64 --config RelWithDebInfo --target taiga
+
+      - name: Deploy Qt dependencies
+        run: |
+          & "$env:Qt6_DIR/bin/windeployqt.exe" --release bin/RelWithDebInfo/Taiga.exe
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Taiga-x64
+          path: bin/RelWithDebInfo/
+          retention-days: 30

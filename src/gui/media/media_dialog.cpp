@@ -230,7 +230,7 @@ void MediaDialog::initDetails() {
   ui_->infoLayout->addRow(get_row_title(tr("Status:")),
                           get_row_label(formatStatus(m_anime.status)));
   ui_->infoLayout->addRow(get_row_title(tr("Season:")), seasonLabel);
-  ui_->infoLayout->addRow(get_row_title(tr("Score:")), get_row_label(formatScore(m_anime.score)));
+  // ui_->infoLayout->addRow(get_row_title(tr("Score:")), get_row_label(formatScore(m_anime.score)));
   if (!m_anime.genres.empty()) {
     ui_->infoLayout->addRow(get_row_title(tr("Genres:")),
                             get_row_label(joinStrings(m_anime.genres)));

@@ -136,7 +136,6 @@ void ListItemDelegateCards::paint(QPainter* painter, const QStyleOptionViewItem&
     QStringList parts{
         formatType(item->type),
         formatSeason(anime::Season{item->date_started}),
-        formatScore(item->score),
     };
     if (item->episode_count != 1) {
       parts.insert(1, tr("%1 episodes").arg(formatNumber(item->episode_count, "?")));
