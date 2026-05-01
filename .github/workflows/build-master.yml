@@ -1,0 +1,31 @@
+name: Build Taiga (v1)
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build
+        run: msbuild project/vs2022/taiga.sln /p:Configuration=Release /p:Platform=Win32
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Taiga-x86
+          path: project/vs2022/Release/Taiga.exe
+          retention-days: 30

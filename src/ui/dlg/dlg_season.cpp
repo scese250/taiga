@@ -275,8 +275,7 @@ LRESULT SeasonDialog::OnListNotify(LPARAM lParam) {
         std::wstring text;
         const std::wstring separator = L" \u2022 ";
         text += ui::TranslateType(anime_item->GetType()) + separator +
-                ui::TranslateNumber(anime_item->GetEpisodeCount(), L"?") + L" eps." + separator +
-                ui::TranslateScore(anime_item->GetScore()) + separator;
+                ui::TranslateNumber(anime_item->GetEpisodeCount(), L"?") + L" eps." + separator;
         switch (sync::GetCurrentServiceId()) {
           default:
             text += L"#" + ToWstr(anime_item->GetPopularity());
@@ -502,7 +501,6 @@ LRESULT SeasonDialog::OnListCustomDraw(LPARAM lParam) {
           DRAWLINE(L"Producers:");
           break;
       }
-      DRAWLINE(L"Score:");
       DRAWLINE(L"Popularity:");
 
       rect_details.Set(rect_details.left + ScaleX(75), text_top,
@@ -524,7 +522,6 @@ LRESULT SeasonDialog::OnListCustomDraw(LPARAM lParam) {
           break;
         }
       }
-      DRAWLINE(ui::TranslateScore(anime_item->GetScore()));
       switch (current_service) {
         default:
           DRAWLINE(L"#" + ToWstr(anime_item->GetPopularity()));
