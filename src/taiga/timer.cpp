@@ -56,6 +56,7 @@ void Timer::OnTimeout() {
   switch (id()) {
     case kTimerAnimeList:
       ui::DlgAnimeList.listview.RefreshLastUpdateColumn();
+      ui::DlgAnimeList.listview.RefreshNextEpisodeColumn();
       break;
 
     case kTimerDetection:

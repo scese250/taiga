@@ -195,7 +195,11 @@ void PageSeriesInfo::Refresh(int anime_id, bool connect) {
   switch (sync::GetCurrentServiceId()) {
     case sync::ServiceId::Kitsu:
       SetDlgItemText(IDC_STATIC_ANIME_DETAILS_NAMES,
-          L"Type:\nEpisodes:\nStatus:\nSeason:\nCategories:\nProducers:");
+          L"Type:\nEpisodes:\nStatus:\nAired:\nSeason:\nCategories:\nProducers:");
+      break;
+    default:
+      SetDlgItemText(IDC_STATIC_ANIME_DETAILS_NAMES,
+          L"Type:\nEpisodes:\nStatus:\nAired:\nSeason:\nGenres:\nProducers:");
       break;
   }
   auto genres = anime_item->GetGenres();
@@ -205,6 +209,7 @@ void PageSeriesInfo::Refresh(int anime_id, bool connect) {
   text = ui::TranslateType(anime_item->GetType()) + L"\n" +
          ui::TranslateNumber(anime_item->GetEpisodeCount(), L"Unknown") + L"\n" +
          ui::TranslateStatus(anime_item->GetAiringStatus()) + L"\n" +
+         anime::FormatAiredDateString(*anime_item) + L"\n" +
          ui::TranslateDateToSeasonString(anime_item->GetDateStart()) + L"\n" +
          (genres.empty() ? L"Unknown" : Join(genres, L", ")) + L"\n" +
          (producers.empty() ? L"Unknown" : Join(producers, L", "));

@@ -613,6 +613,90 @@ bool IsValidDate(const Date& date) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+std::wstring FormatNextEpisodeCountdown(const Item& item) {
+  // Finished airing → N/A
+  if (IsFinishedAiring(item))
+    return L"N/A";
+
+  const auto airing_status = GetAiringStatus(item);
+
+  // Not yet aired → show month + year from start date
+  if (airing_status == SeriesStatus::NotYetAired) {
+    const auto& date_start = item.GetDateStart();
+    if (date_start.year() && date_start.month()) {
+      static const std::wstring month_names[] = {
+        L"", L"Jan", L"Feb", L"Mar", L"Apr", L"May", L"Jun",
+        L"Jul", L"Aug", L"Sep", L"Oct", L"Nov", L"Dec"
+      };
+      unsigned short m = date_start.month();
+      if (m >= 1 && m <= 12)
+        return month_names[m] + L" " + ToWstr(date_start.year());
+    }
+    return L"TBA";
+  }
+
+  // Airing → calculate countdown
+  time_t next_time = item.GetNextEpisodeTime();
+  if (!next_time)
+    return L"-";
+
+  // Add 1 hour (3600 seconds) for simulcast delay
+  next_time += 3600;
+
+  time_t now = time(nullptr);
+  time_t diff = next_time - now;
+
+  if (diff <= 0)
+    return L"Airing now";
+
+  // Convert to hours and days
+  long hours = static_cast<long>(diff / 3600);
+  long days = static_cast<long>(diff / 86400);
+
+  if (hours < 24) {
+    return ToWstr(std::max(1L, hours)) + (hours == 1 ? L" hour left" : L" hours left");
+  }
+
+  return ToWstr(days) + (days == 1 ? L" day left" : L" days left");
+}
+
+std::wstring FormatAiredDateString(const Item& item) {
+  const auto& date_start = item.GetDateStart();
+  const auto& date_end = item.GetDateEnd();
+
+  static const std::wstring month_names[] = {
+    L"", L"Jan", L"Feb", L"Mar", L"Apr", L"May", L"Jun",
+    L"Jul", L"Aug", L"Sep", L"Oct", L"Nov", L"Dec"
+  };
+
+  auto format_date = [&](const Date& date) -> std::wstring {
+    if (!date.year())
+      return L"?";
+    std::wstring result;
+    if (date.month() >= 1 && date.month() <= 12)
+      result = month_names[date.month()] + L" ";
+    if (date.day())
+      result += ToWstr(date.day()) + L", ";
+    result += ToWstr(date.year());
+    return result;
+  };
+
+  std::wstring start_str = format_date(date_start);
+  std::wstring end_str = format_date(date_end);
+
+  // If both are unknown
+  if (start_str == L"?" && end_str == L"?")
+    return L"Unknown";
+
+  // Single episode (movie, etc.) or same date
+  if (item.GetEpisodeCount() == 1 && start_str != L"?")
+    return start_str;
+
+  return start_str + L" to " + end_str;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 std::wstring NormalizeSynopsis(std::wstring str) {
   while (ReplaceString(str, L"\r\n", L"\n"));
   ReplaceString(str, L"<br>", L"\n");

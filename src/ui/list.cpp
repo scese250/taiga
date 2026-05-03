@@ -169,6 +169,16 @@ int SortListBySeason(const anime::Item& item1, const anime::Item& item2) {
                                       anime::Season{item2.GetDateStart()});
 }
 
+int SortListByNextEpisode(const anime::Item& item1, const anime::Item& item2) {
+  time_t time1 = item1.GetNextEpisodeTime();
+  time_t time2 = item2.GetNextEpisodeTime();
+  // Unaired/unknown episodes to the end of the list when sorting
+  if (time1 == 0 && time2 == 0) return nstd::cmp::equal;
+  if (time1 == 0) return nstd::cmp::greater;
+  if (time2 == 0) return nstd::cmp::less;
+  return nstd::compare<time_t>(time1, time2);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 int SortList(int type, LPCWSTR str1, LPCWSTR str2) {
@@ -217,6 +227,8 @@ int SortList(int type, int order, int id1, int id2) {
         return SortListByAiringStatus(*item1, *item2);
       case kListSortTitle:
         return SortListByTitle(*item1, *item2);
+      case kListSortNextEpisode:
+        return SortListByNextEpisode(*item1, *item2);
     }
   }
 
@@ -266,7 +278,8 @@ static int ListViewCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort,
     case kListSortScore:
     case kListSortSeason:
     case kListSortStatus:
-    case kListSortTitle: {
+    case kListSortTitle:
+    case kListSortNextEpisode: {
       return_value = SortList(list->GetSortType(secondary),
                               list->GetSortOrder(secondary),
                               static_cast<int>(list->GetItemParam(lParam1)),

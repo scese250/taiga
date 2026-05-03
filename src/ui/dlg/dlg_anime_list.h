@@ -54,6 +54,7 @@ enum AnimeListColumn {
   kColumnUserDateStarted,
   kColumnUserDateCompleted,
   kColumnUserNotes,
+  kColumnNextEpisode,
 };
 
 class AnimeListDialog : public win::Dialog {
@@ -126,6 +127,7 @@ public:
     AnimeListColumn FindColumnAtSubItemIndex(int index);
     void RefreshColumns(bool reset = false);
     void RefreshLastUpdateColumn();
+    void RefreshNextEpisodeColumn();
     void UpdateColumnSetting(const AnimeListColumn column) const;
     static AnimeListColumn TranslateColumnName(const std::wstring& name);
 

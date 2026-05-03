@@ -56,6 +56,7 @@ enum AnimeListTooltips {
   kTooltipEpisodeMinus,
   kTooltipEpisodePlus,
   kTooltipUserLastUpdated,
+  kTooltipNextEpisode,
   kTooltipLast,
 };
 
@@ -432,6 +433,7 @@ int AnimeListDialog::ListView::GetDefaultSortOrder(AnimeListColumn column) {
     case kColumnUserDateCompleted:
     case kColumnUserProgress:
     case kColumnUserRating:
+    case kColumnNextEpisode:
       return -1;
     case kColumnAnimeTitle:
     case kColumnUserNotes:
@@ -458,6 +460,8 @@ int AnimeListDialog::ListView::GetSortType(AnimeListColumn column) {
       return ui::kListSortSeason;
     case kColumnAnimeStatus:
       return ui::kListSortStatus;
+    case kColumnNextEpisode:
+      return ui::kListSortNextEpisode;
     default:
       return ui::kListSortDefault;
   }
@@ -561,6 +565,7 @@ void AnimeListDialog::ListView::RefreshItem(int index) {
     tooltips.NewToolRect(kTooltipAnimeSeason, nullptr);
     tooltips.NewToolRect(kTooltipAnimeStatus, nullptr);
     tooltips.NewToolRect(kTooltipUserLastUpdated, nullptr);
+    tooltips.NewToolRect(kTooltipNextEpisode, nullptr);
     return;
   }
 
@@ -615,6 +620,19 @@ void AnimeListDialog::ListView::RefreshItem(int index) {
       if (time_last_updated > 0) {
         const std::wstring text = GetAbsoluteTimeString(time_last_updated);
         update_tooltip(kTooltipUserLastUpdated, text.c_str(), &rect_item);
+      }
+    }
+  }
+
+  if (columns[kColumnNextEpisode].visible) {
+    win::Rect rect_item;
+    get_subitem_rect(kColumnNextEpisode, rect_item);
+    if (rect_item.PtIn(pt)) {
+      time_t next_time = anime_item->GetNextEpisodeTime();
+      if (next_time > 0) {
+        time_t adjusted = next_time + 3600;  // +1h simulcast delay
+        const std::wstring text = GetAbsoluteTimeString(adjusted, "%A, %d %B %Y %H:%M");
+        update_tooltip(kTooltipNextEpisode, text.c_str(), &rect_item);
       }
     }
   }
@@ -1496,6 +1514,9 @@ void AnimeListDialog::RefreshListItemColumns(int index, const anime::Item& anime
       case kColumnUserRating:
         text = ui::TranslateMyScore(anime_item.GetMyScore());
         break;
+      case kColumnNextEpisode:
+        text = anime::FormatNextEpisodeCountdown(anime_item);
+        break;
     }
     if (!text.empty())
       listview.SetItem(index, column.index, text.c_str());
@@ -1617,6 +1638,10 @@ void AnimeListDialog::ListView::InitializeColumns(bool reset) {
       {kColumnUserNotes, false, i, i++,
        0, static_cast<unsigned short>(ScaleX(100)), static_cast<unsigned short>(ScaleX(85)),
        LVCFMT_LEFT, L"Notes", L"user_notes"})));
+  columns.insert(std::make_pair(kColumnNextEpisode, ColumnData(
+      {kColumnNextEpisode, true, i, i++,
+       0, static_cast<unsigned short>(ScaleX(110)), static_cast<unsigned short>(ScaleX(85)),
+       LVCFMT_RIGHT, L"Next episode", L"next_episode"})));
 
   if (reset) {
     for (const auto& [column_type, _] : columns) {
@@ -1813,6 +1838,25 @@ void AnimeListDialog::ListView::RefreshLastUpdateColumn() {
   }
 }
 
+void AnimeListDialog::ListView::RefreshNextEpisodeColumn() {
+  const auto& column = columns[kColumnNextEpisode];
+
+  if (!column.visible)
+    return;
+
+  int item_count = GetItemCount();
+
+  for (int i = 0; i < item_count; ++i) {
+    auto anime_item = anime::db.Find(GetItemParam(i));
+    if (!anime_item)
+      continue;
+    if (anime_item->GetAiringStatus() == anime::SeriesStatus::Airing) {
+      std::wstring text = anime::FormatNextEpisodeCountdown(*anime_item);
+      SetItem(i, column.index, text.c_str());
+    }
+  }
+}
+
 void AnimeListDialog::ListView::SetColumnSize(int index, unsigned short width) {
   for (auto& [column_type, column] : columns) {
     if (column.index == index) {
@@ -1844,6 +1888,7 @@ AnimeListColumn AnimeListDialog::ListView::TranslateColumnName(const std::wstrin
     {L"user_date_started", kColumnUserDateStarted},
     {L"user_date_completed", kColumnUserDateCompleted},
     {L"user_last_updated", kColumnUserLastUpdated},
+    {L"next_episode", kColumnNextEpisode},
     {L"user_notes", kColumnUserNotes},
     {L"user_progress", kColumnUserProgress},
     {L"user_rating", kColumnUserRating},
