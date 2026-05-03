@@ -77,6 +77,8 @@ bool IsValidDate(const Date& date);
 std::wstring FormatNextEpisodeCountdown(const Item& item);
 std::wstring FormatAiredDateString(const Item& item);
 
+time_t CalculateNextEpisodeTimeJST(const std::string& day_of_week, const std::string& start_time);
+
 std::wstring NormalizeSynopsis(std::wstring str);
 
 }  // namespace anime

@@ -216,6 +216,7 @@ void HandleError(const Error& error) {
 std::wstring GetAnimeFields() {
   return L"alternative_titles,"
          L"average_episode_duration,"
+         L"broadcast,"
          L"end_date,"
          L"genres,"
          L"id,"
@@ -324,6 +325,16 @@ int ParseAnimeObject(const Json& json) {
   anime_item.SetGenres(get_names(json, "genres"));
   anime_item.SetProducers(std::vector<std::wstring>{});
   anime_item.SetStudios(get_names(json, "studios"));
+
+  if (json.contains("broadcast")) {
+    const auto& broadcast = json["broadcast"];
+    const auto day_of_week = JsonReadStr(broadcast, "day_of_the_week");
+    const auto start_time = JsonReadStr(broadcast, "start_time");
+    time_t next_time = anime::CalculateNextEpisodeTimeJST(day_of_week, start_time);
+    if (next_time > 0) {
+      anime_item.SetNextEpisodeTime(next_time);
+    }
+  }
 
   Meow.UpdateTitles(anime_item);
 

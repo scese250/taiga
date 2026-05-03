@@ -613,6 +613,55 @@ bool IsValidDate(const Date& date) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+time_t CalculateNextEpisodeTimeJST(const std::string& day_of_week, const std::string& start_time) {
+  if (day_of_week.empty() || start_time.empty())
+    return 0;
+
+  int hour = 0, minute = 0;
+  if (sscanf(start_time.c_str(), "%d:%d", &hour, &minute) != 2)
+    return 0;
+
+  int target_wday = -1;
+  if (day_of_week == "sunday") target_wday = 0;
+  else if (day_of_week == "monday") target_wday = 1;
+  else if (day_of_week == "tuesday") target_wday = 2;
+  else if (day_of_week == "wednesday") target_wday = 3;
+  else if (day_of_week == "thursday") target_wday = 4;
+  else if (day_of_week == "friday") target_wday = 5;
+  else if (day_of_week == "saturday") target_wday = 6;
+  
+  if (target_wday == -1)
+    return 0;
+
+  time_t now = std::time(nullptr);
+  time_t now_jst = now + 9 * 3600;
+  struct tm jst_tm;
+  gmtime_s(&jst_tm, &now_jst);
+
+  int current_wday = jst_tm.tm_wday;
+  int days_diff = target_wday - current_wday;
+  
+  if (days_diff < 0) {
+    days_diff += 7;
+  } else if (days_diff == 0) {
+    if (jst_tm.tm_hour > hour || (jst_tm.tm_hour == hour && jst_tm.tm_min >= minute)) {
+      days_diff += 7;
+    }
+  }
+
+  struct tm target_tm = jst_tm;
+  target_tm.tm_mday += days_diff;
+  target_tm.tm_hour = hour;
+  target_tm.tm_min = minute;
+  target_tm.tm_sec = 0;
+
+  time_t target_jst = _mkgmtime(&target_tm);
+  if (target_jst == -1)
+    return 0;
+
+  return target_jst - 9 * 3600;
+}
+
 std::wstring FormatNextEpisodeCountdown(const Item& item) {
   // Finished airing → N/A
   if (IsFinishedAiring(item))
