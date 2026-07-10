@@ -41,9 +41,28 @@
 
 namespace track::jikan {
 
-// Minimum delay between Jikan API requests to respect the rate limit.
-static void JikanDelay() {
+// Sends a Jikan API request with rate-limit delay and automatic retry.
+// Retries on HTTP 429 (Too Many Requests) and 504 (Gateway Timeout).
+static void SendJikanRequest(taiga::http::Request request,
+                             taiga::http::ResponseCallback on_response,
+                             int retries_left = 3) {
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+  auto wrapper = [request, on_response, retries_left](
+      const taiga::http::Response& response) mutable {
+    const int status = response.status_code();
+    if ((status == 429 || status == 504) && retries_left > 0) {
+      const int wait_ms = (status == 429) ? 3000 : 2000;
+      LOGW(L"Jikan: HTTP {} - retrying in {}ms ({} attempts left).",
+           status, wait_ms, retries_left);
+      std::this_thread::sleep_for(std::chrono::milliseconds(wait_ms));
+      SendJikanRequest(request, on_response, retries_left - 1);
+    } else {
+      on_response(response);
+    }
+  };
+
+  taiga::http::Send(request, nullptr, wrapper);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,10 +241,10 @@ static void WalkSequelChain(std::shared_ptr<FetchState> state, int anime_id) {
   if (local_eps > 0) {
     state->current_chain.seasons.push_back({anime_id, local_eps});
 
-    // Query Jikan for this anime's relations to find sequel
+    // Query Jikan for this anime's data (includes relations) to find sequel
     taiga::http::Request request;
     request.set_target(
-        "https://api.jikan.moe/v4/anime/" + std::to_string(anime_id) + "/relations");
+        "https://api.jikan.moe/v4/anime/" + std::to_string(anime_id) + "/full");
 
     const auto on_response =
         [state, anime_id](const taiga::http::Response& response) {
@@ -244,14 +263,15 @@ static void WalkSequelChain(std::shared_ptr<FetchState> state, int anime_id) {
 
       Json root;
       if (!JsonParseString(response.body(), root) ||
-          !root.contains("data") || !root["data"].is_array()) {
+          !root.contains("data") || !root["data"].is_object() ||
+          !root["data"].contains("relations") || !root["data"]["relations"].is_array()) {
         FinalizeChain(state);
         return;
       }
 
       // Find sequel relation
       int sequel_id = 0;
-      for (const auto& relation : root["data"]) {
+      for (const auto& relation : root["data"]["relations"]) {
         if (JsonReadStr(relation, "relation") != "Sequel")
           continue;
         if (!relation.contains("entry") || !relation["entry"].is_array())
@@ -276,8 +296,7 @@ static void WalkSequelChain(std::shared_ptr<FetchState> state, int anime_id) {
       }
     };
 
-    JikanDelay();
-    taiga::http::Send(request, nullptr, on_response);
+    SendJikanRequest(request, on_response);
   } else {
     // No local episode count; try Jikan API to get it
     FetchEpisodeCount(state, anime_id, [state, anime_id](int eps) {
@@ -290,10 +309,10 @@ static void WalkSequelChain(std::shared_ptr<FetchState> state, int anime_id) {
         return;
       }
 
-      // Continue finding sequels
+      // Continue finding sequels via /full endpoint
       taiga::http::Request request;
       request.set_target(
-          "https://api.jikan.moe/v4/anime/" + std::to_string(anime_id) + "/relations");
+          "https://api.jikan.moe/v4/anime/" + std::to_string(anime_id) + "/full");
 
       const auto on_response =
           [state, anime_id](const taiga::http::Response& response) {
@@ -312,13 +331,14 @@ static void WalkSequelChain(std::shared_ptr<FetchState> state, int anime_id) {
 
         Json root;
         if (!JsonParseString(response.body(), root) ||
-            !root.contains("data") || !root["data"].is_array()) {
+            !root.contains("data") || !root["data"].is_object() ||
+            !root["data"].contains("relations") || !root["data"]["relations"].is_array()) {
           FinalizeChain(state);
           return;
         }
 
         int sequel_id = 0;
-        for (const auto& relation : root["data"]) {
+        for (const auto& relation : root["data"]["relations"]) {
           if (JsonReadStr(relation, "relation") != "Sequel")
             continue;
           if (!relation.contains("entry") || !relation["entry"].is_array())
@@ -341,8 +361,7 @@ static void WalkSequelChain(std::shared_ptr<FetchState> state, int anime_id) {
         }
       };
 
-      JikanDelay();
-      taiga::http::Send(request, nullptr, on_response);
+      SendJikanRequest(request, on_response);
     });
   }
 }
@@ -378,8 +397,7 @@ static void FetchEpisodeCount(std::shared_ptr<FetchState> state, int anime_id,
     on_result(episodes);
   };
 
-  JikanDelay();
-  taiga::http::Send(request, nullptr, on_response);
+  SendJikanRequest(request, on_response);
 }
 
 static void ProcessNextAnime(std::shared_ptr<FetchState> state) {
