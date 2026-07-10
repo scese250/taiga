@@ -51,8 +51,7 @@ BOOL SearchDialog::OnInitDialog() {
   list_.InsertColumn(0, ScaleX(400), ScaleX(400), LVCFMT_LEFT,   L"Anime title");
   list_.InsertColumn(1,  ScaleX(60),  ScaleX(60), LVCFMT_CENTER, L"Type");
   list_.InsertColumn(2,  ScaleX(60),  ScaleX(60), LVCFMT_RIGHT,  L"Episodes");
-  list_.InsertColumn(3,  ScaleX(60),  ScaleX(60), LVCFMT_RIGHT,  L"Score");
-  list_.InsertColumn(4, ScaleX(100), ScaleX(100), LVCFMT_RIGHT,  L"Season");
+  list_.InsertColumn(3, ScaleX(100), ScaleX(100), LVCFMT_RIGHT,  L"Season");
   list_.EnableGroupView(true);
   list_.InsertGroup(0, L"Not in list");
   list_.InsertGroup(1, L"In list");
@@ -106,8 +105,7 @@ LRESULT SearchDialog::OnNotify(int idCtrl, LPNMHDR pnmh) {
         switch (lplv->iSubItem) {
           case 1:  // Type
           case 2:  // Episodes
-          case 3:  // Score
-          case 4:  // Season
+          case 3:  // Season
             order = -1;
             break;
         }
@@ -122,12 +120,8 @@ LRESULT SearchDialog::OnNotify(int idCtrl, LPNMHDR pnmh) {
           case 2:
             list_.Sort(lplv->iSubItem, order, ui::kListSortNumber, ui::ListViewCompareProc);
             break;
-          // Score
-          case 3:
-            list_.Sort(lplv->iSubItem, order, ui::kListSortScore, ui::ListViewCompareProc);
-            break;
           // Season
-          case 4:
+          case 3:
             list_.Sort(lplv->iSubItem, order, ui::kListSortDateStart, ui::ListViewCompareProc);
             break;
           // Other columns
@@ -211,8 +205,7 @@ void SearchDialog::AddAnimeToList(int anime_id) {
                      static_cast<LPARAM>(anime_item->GetId()));
     list_.SetItem(i, 1, ui::TranslateType(anime_item->GetType()).c_str());
     list_.SetItem(i, 2, ui::TranslateNumber(anime_item->GetEpisodeCount()).c_str());
-    list_.SetItem(i, 3, ui::TranslateScore(anime_item->GetScore()).c_str());
-    list_.SetItem(i, 4, ui::TranslateDateToSeasonString(anime_item->GetDateStart()).c_str());
+    list_.SetItem(i, 3, ui::TranslateDateToSeasonString(anime_item->GetDateStart()).c_str());
   }
 }
 
