@@ -18,9 +18,11 @@
 
 #include "track/jikan.h"
 
+#include <chrono>
 #include <climits>
 #include <memory>
 #include <set>
+#include <thread>
 #include <vector>
 
 #include "base/file.h"
@@ -38,6 +40,11 @@
 #include "track/recognition.h"
 
 namespace track::jikan {
+
+// Minimum delay between Jikan API requests to respect the rate limit.
+static void JikanDelay() {
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Data structures
@@ -269,6 +276,7 @@ static void WalkSequelChain(std::shared_ptr<FetchState> state, int anime_id) {
       }
     };
 
+    JikanDelay();
     taiga::http::Send(request, nullptr, on_response);
   } else {
     // No local episode count; try Jikan API to get it
@@ -333,6 +341,7 @@ static void WalkSequelChain(std::shared_ptr<FetchState> state, int anime_id) {
         }
       };
 
+      JikanDelay();
       taiga::http::Send(request, nullptr, on_response);
     });
   }
@@ -369,6 +378,7 @@ static void FetchEpisodeCount(std::shared_ptr<FetchState> state, int anime_id,
     on_result(episodes);
   };
 
+  JikanDelay();
   taiga::http::Send(request, nullptr, on_response);
 }
 
