@@ -394,6 +394,8 @@ FONT 9, "Segoe UI", 400, 0, 0
     GROUPBOX        "Progress", IDC_STATIC, 7, 128, 301, 37, 0, WS_EX_LEFT
     AUTOCHECKBOX    "Display aired episodes (estimated)", IDC_CHECK_LIST_PROGRESS_AIRED, 12, 139, 141, 8, 0, WS_EX_LEFT
     AUTOCHECKBOX    "Display available episodes in library folders", IDC_CHECK_LIST_PROGRESS_AVAILABLE, 12, 150, 170, 8, 0, WS_EX_LEFT
+    GROUPBOX        "Sequel resolution", IDC_STATIC, 7, 172, 301, 26, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "Auto-resolve sequel episodes via Jikan API (MAL only)", IDC_CHECK_JIKAN_AUTO_RESOLVE, 12, 183, 200, 8, 0, WS_EX_LEFT
 }
 
 

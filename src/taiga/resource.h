@@ -216,3 +216,4 @@
 #define IDC_EDIT_ANIME_REWATCHES                1179
 #define IDC_SPIN_ANIME_REWATCHES                1180
 #define IDC_CHECK_DISCORD_WATCHING              1181
+#define IDC_CHECK_JIKAN_AUTO_RESOLVE            1182

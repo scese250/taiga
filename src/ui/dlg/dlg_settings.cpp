@@ -238,6 +238,7 @@ void SettingsDialog::OnOK() {
     taiga::settings.SetAppListDisplayHighlightedOnTop(page->IsDlgButtonChecked(IDC_CHECK_HIGHLIGHT_ONTOP));
     taiga::settings.SetAppListProgressDisplayAired(page->IsDlgButtonChecked(IDC_CHECK_LIST_PROGRESS_AIRED));
     taiga::settings.SetAppListProgressDisplayAvailable(page->IsDlgButtonChecked(IDC_CHECK_LIST_PROGRESS_AVAILABLE));
+    taiga::settings.SetRecognitionAutoResolveSequels(page->IsDlgButtonChecked(IDC_CHECK_JIKAN_AUTO_RESOLVE));
   }
 
   // Recognition > General

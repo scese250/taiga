@@ -199,6 +199,7 @@ BOOL SettingsPage::OnInitDialog() {
       EnableDlgItem(IDC_CHECK_HIGHLIGHT_ONTOP, enabled);
       CheckDlgButton(IDC_CHECK_LIST_PROGRESS_AIRED, taiga::settings.GetAppListProgressDisplayAired());
       CheckDlgButton(IDC_CHECK_LIST_PROGRESS_AVAILABLE, taiga::settings.GetAppListProgressDisplayAvailable());
+      CheckDlgButton(IDC_CHECK_JIKAN_AUTO_RESOLVE, taiga::settings.GetRecognitionAutoResolveSequels());
       break;
     }
 
