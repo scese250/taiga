@@ -68,7 +68,8 @@ void Timer::OnTimeout() {
       break;
 
     case kTimerLibrary:
-      ScanAvailableEpisodesQuick();
+      if (!IsScanningAsync())
+        ScanAvailableEpisodesQuick();
       break;
 
     case kTimerMedia:

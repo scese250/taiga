@@ -29,6 +29,7 @@
 #include "media/anime_filter.h"
 
 constexpr unsigned int WM_TAIGA_SHOWMENU = WM_USER + 1337;
+constexpr unsigned int WM_TAIGA_SCAN_FINISHED = WM_USER + 1338;
 
 namespace ui {
 

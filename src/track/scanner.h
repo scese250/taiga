@@ -20,6 +20,7 @@
 
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "base/file_search.h"
 #include "track/episode.h"
@@ -28,6 +29,16 @@ namespace track {
 
 class Scanner : public base::FileSearch {
 public:
+  struct EpisodeResult {
+    int anime_id;
+    int episode_number;
+    std::wstring path;
+  };
+  struct FolderResult {
+    int anime_id;
+    std::wstring folder;
+  };
+
   bool Search(const std::wstring& root);
 
   const std::wstring& path_found() const;
@@ -35,6 +46,10 @@ public:
   void set_anime_id(int anime_id);
   void set_episode_number(int episode_number);
   void set_path_found(const std::wstring& path_found);
+
+  void set_collect_results(bool collect);
+  std::vector<EpisodeResult> take_episode_results();
+  std::vector<FolderResult> take_folder_results();
 
 private:
   bool OnDirectory(const base::FileSearchResult& result);
@@ -44,6 +59,9 @@ private:
   anime::Episode episode_;
   int episode_number_ = 0;
   std::wstring path_found_;
+  bool collect_results_ = false;
+  std::vector<EpisodeResult> episode_results_;
+  std::vector<FolderResult> folder_results_;
 };
 
 inline Scanner scanner;
@@ -54,3 +72,7 @@ void ScanAvailableEpisodes(bool silent);
 void ScanAvailableEpisodes(bool silent, int anime_id, int episode_number);
 void ScanAvailableEpisodesQuick();
 void ScanAvailableEpisodesQuick(int anime_id);
+void ScanAvailableEpisodesAsync();
+void ApplyAsyncScanResults();
+void ShutdownAsyncScan();
+bool IsScanningAsync();

@@ -18,6 +18,10 @@
 
 #include "track/scanner.h"
 
+#include <atomic>
+#include <mutex>
+#include <thread>
+
 #include "base/file.h"
 #include "base/log.h"
 #include "base/string.h"
@@ -26,6 +30,7 @@
 #include "taiga/settings.h"
 #include "track/episode_util.h"
 #include "track/recognition.h"
+#include "ui/dlg/dlg_main.h"
 #include "ui/ui.h"
 
 namespace track {
@@ -52,8 +57,14 @@ bool Scanner::OnDirectory(const base::FileSearchResult& result) {
   const auto anime_item = anime::db.Find(episode_.anime_id);
 
   if (anime_item && Meow.IsValidAnimeType(episode_)) {
-    if (anime_item->GetFolder().empty())
-      anime_item->SetFolder(AddTrailingSlash(result.root) + result.name);
+    if (anime_item->GetFolder().empty()) {
+      const auto folder = AddTrailingSlash(result.root) + result.name;
+      if (collect_results_) {
+        folder_results_.push_back({anime_item->GetId(), folder});
+      } else {
+        anime_item->SetFolder(folder);
+      }
+    }
 
     if (anime_id_ && anime_id_.value() == anime_item->GetId()) {
       path_found_ = AddTrailingSlash(result.root) + result.name;
@@ -103,7 +114,11 @@ bool Scanner::OnFile(const base::FileSearchResult& result) {
     }
 
     for (int i = lower_bound; i <= upper_bound; ++i) {
-      anime_item->SetEpisodeAvailability(i, true, path);
+      if (collect_results_) {
+        episode_results_.push_back({anime_item->GetId(), i, path});
+      } else {
+        anime_item->SetEpisodeAvailability(i, true, path);
+      }
     }
 
     if (anime_id_ && anime_id_.value() == anime_item->GetId()) {
@@ -152,6 +167,18 @@ void Scanner::set_episode_number(int episode_number) {
 
 void Scanner::set_path_found(const std::wstring& path_found) {
   path_found_ = path_found;
+}
+
+void Scanner::set_collect_results(bool collect) {
+  collect_results_ = collect;
+}
+
+std::vector<Scanner::EpisodeResult> Scanner::take_episode_results() {
+  return std::move(episode_results_);
+}
+
+std::vector<Scanner::FolderResult> Scanner::take_folder_results() {
+  return std::move(folder_results_);
 }
 
 }  // namespace track
@@ -277,4 +304,95 @@ void ScanAvailableEpisodesQuick(int anime_id) {
   }
 
   ui::OnScanAvailableEpisodesFinished();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Async scan implementation
+
+namespace {
+std::thread async_scan_thread;
+std::atomic<bool> async_scan_active{false};
+std::mutex async_results_mutex;
+std::vector<track::Scanner::EpisodeResult> pending_episode_results;
+std::vector<track::Scanner::FolderResult> pending_folder_results;
+}  // namespace
+
+bool IsScanningAsync() {
+  return async_scan_active.load();
+}
+
+void ScanAvailableEpisodesAsync() {
+  if (async_scan_active.exchange(true)) {
+    return;  // Already scanning in background
+  }
+
+  if (async_scan_thread.joinable()) {
+    async_scan_thread.join();
+  }
+
+  // Capture settings on the calling (UI) thread before launching
+  const auto library_folders = taiga::settings.GetLibraryFolders();
+  const auto min_file_size = taiga::settings.GetLibraryFileSizeThreshold();
+  const HWND hwnd = ui::DlgMain.GetWindowHandle();
+
+  async_scan_thread = std::thread([library_folders, min_file_size, hwnd]() {
+    track::Scanner local_scanner;
+    local_scanner.set_collect_results(true);
+    local_scanner.options.min_file_size = min_file_size;
+
+    for (const auto& folder : library_folders) {
+      if (!FolderExists(folder))
+        continue;
+      local_scanner.options.skip_directories = false;
+      local_scanner.options.skip_files = false;
+      local_scanner.options.skip_subdirectories = false;
+      local_scanner.Search(folder);
+    }
+
+    {
+      std::lock_guard<std::mutex> lock(async_results_mutex);
+      pending_episode_results = local_scanner.take_episode_results();
+      pending_folder_results = local_scanner.take_folder_results();
+    }
+
+    ::PostMessage(hwnd, WM_TAIGA_SCAN_FINISHED, 0, 0);
+  });
+}
+
+void ApplyAsyncScanResults() {
+  std::vector<track::Scanner::EpisodeResult> episode_results;
+  std::vector<track::Scanner::FolderResult> folder_results;
+
+  {
+    std::lock_guard<std::mutex> lock(async_results_mutex);
+    episode_results = std::move(pending_episode_results);
+    folder_results = std::move(pending_folder_results);
+  }
+
+  // Apply folder assignments
+  for (const auto& result : folder_results) {
+    auto anime_item = anime::db.Find(result.anime_id);
+    if (anime_item && anime_item->GetFolder().empty()) {
+      anime_item->SetFolder(result.folder);
+    }
+  }
+
+  // Apply episode availability
+  for (const auto& result : episode_results) {
+    auto anime_item = anime::db.Find(result.anime_id);
+    if (anime_item) {
+      anime_item->SetEpisodeAvailability(
+          result.episode_number, true, result.path);
+    }
+  }
+
+  async_scan_active.store(false);
+
+  ui::OnScanAvailableEpisodesFinished();
+}
+
+void ShutdownAsyncScan() {
+  if (async_scan_thread.joinable()) {
+    async_scan_thread.join();
+  }
 }

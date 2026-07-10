@@ -103,9 +103,7 @@ BOOL MainDialog::OnInitDialog() {
   if (taiga::settings.GetSyncAutoOnStart()) {
     sync::Synchronize();
   }
-  if (taiga::settings.GetAppBehaviorScanAvailableEpisodes()) {
-    ScanAvailableEpisodesQuick();
-  }
+  ScanAvailableEpisodesAsync();
 
   // Select default content page
   navigation.SetCurrentPage(kSidebarItemAnimeList);
@@ -310,6 +308,12 @@ INT_PTR MainDialog::DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
       toolbar_wm.ShowMenu();
       return TRUE;
     }
+
+    // Async scan finished
+    case WM_TAIGA_SCAN_FINISHED: {
+      ApplyAsyncScanResults();
+      return TRUE;
+    }
   }
 
   return DialogProcDefault(hwnd, uMsg, wParam, lParam);
@@ -469,7 +473,7 @@ BOOL MainDialog::PreTranslateMessage(MSG* pMsg) {
           switch (navigation.GetCurrentPage()) {
             case kSidebarItemAnimeList:
               // Scan available episodes
-              ScanAvailableEpisodes(false);
+              ScanAvailableEpisodesAsync();
               return TRUE;
             case kSidebarItemHistory:
               // Refresh history
@@ -600,6 +604,8 @@ BOOL MainDialog::OnClose() {
 }
 
 BOOL MainDialog::OnDestroy() {
+  ShutdownAsyncScan();
+
   if (taiga::settings.GetAppPositionRemember()) {
     WINDOWPLACEMENT wp = {0};
     wp.length = sizeof(WINDOWPLACEMENT);
