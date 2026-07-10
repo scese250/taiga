@@ -71,6 +71,10 @@ public:
   bool ReadRelations(const std::string& document);
   bool SearchEpisodeRedirection(int id, const std::pair<int, int>& range, int& destination_id, std::pair<int, int>& destination_range) const;
 
+  void InjectRelation(int source_id, int dest_id,
+                      std::pair<int, int> source_range,
+                      std::pair<int, int> dest_range);
+
 private:
   enum NormalizationType {
     kNormalizeMinimal,

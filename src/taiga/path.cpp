@@ -66,6 +66,8 @@ std::wstring GetPath(Path path) {
       return data_path + L"db\\anime.xml";
     case Path::DatabaseAnimeRelations:
       return data_path + L"db\\anime-relations.txt";
+    case Path::DatabaseJikanRelationsCache:
+      return data_path + L"db\\jikan-relations-cache.json";
     case Path::DatabaseImage:
       return data_path + L"db\\image\\";
     case Path::Feed:

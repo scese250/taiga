@@ -53,6 +53,7 @@ public:
 
 private:
   void CheckAnimeRelations();
+  void CheckJikanSequelRelations(bool relations_updated);
   bool IsAnimeRelationsAvailable() const;
   bool ParseData(std::wstring data);
   bool RunInstaller();

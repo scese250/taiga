@@ -150,6 +150,7 @@ void Settings::InitKeyMap() const {
       {AppSettingKey::RecognitionIgnoredStrings, {"recognition/anitomy/ignored_strings", std::wstring{}}},
       {AppSettingKey::RecognitionLookupParentDirectories, {"recognition/general/lookup_parent_directories", true}},
       {AppSettingKey::RecognitionRelationsLastModified, {"recognition/general/relations_last_modified", std::wstring{}}},
+      {AppSettingKey::RecognitionAutoResolveSequels, {"recognition/general/auto_resolve_sequels", true}},
       {AppSettingKey::SyncUpdateDelay, {"account/update/delay", 120}},
       {AppSettingKey::SyncUpdateAskToConfirm, {"account/update/asktoconfirm", true}},
       {AppSettingKey::SyncUpdateCheckPlayer, {"account/update/checkplayer", false}},
@@ -756,6 +757,14 @@ std::wstring Settings::GetRecognitionRelationsLastModified() const {
 
 void Settings::SetRecognitionRelationsLastModified(const std::wstring& last_modified) {
   set_value(AppSettingKey::RecognitionRelationsLastModified, last_modified);
+}
+
+bool Settings::GetRecognitionAutoResolveSequels() const {
+  return value<bool>(AppSettingKey::RecognitionAutoResolveSequels);
+}
+
+void Settings::SetRecognitionAutoResolveSequels(const bool enabled) {
+  set_value(AppSettingKey::RecognitionAutoResolveSequels, enabled);
 }
 
 int Settings::GetSyncUpdateDelay() const {

@@ -18,36 +18,19 @@
 
 #pragma once
 
-#include <string>
+#include <functional>
 
-namespace sync {
-enum class ServiceId;
-}
+namespace track::jikan {
 
-namespace taiga {
+// Loads cached sequel chain data from disk and injects synthetic
+// redirection rules into the recognition relations map.
+// Called on startup (no network). Returns true if cache was loaded.
+bool LoadCache();
 
-enum class Path {
-  Data,
-  Database,
-  DatabaseAnime,
-  DatabaseAnimeRelations,
-  DatabaseJikanRelationsCache,
-  DatabaseImage,
-  Feed,
-  FeedHistory,
-  Media,
-  Settings,
-  Test,
-  TestRecognition,
-  Theme,
-  ThemeCurrent,
-  User,
-  UserHistory,
-  UserLibrary
-};
+// Queries Jikan API for sequel relations of all "Watching" anime,
+// builds sequel chains, generates synthetic rules, injects them,
+// and saves results to cache. Called from the "Check for updates" flow.
+// Calls on_complete when all async work is done.
+void FetchSequelRelations(std::function<void()> on_complete);
 
-std::wstring GetUserDirectoryName(const sync::ServiceId service_id);
-std::wstring GetUserDirectoryName();
-std::wstring GetPath(Path path);
-
-}  // namespace taiga
+}  // namespace track::jikan

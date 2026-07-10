@@ -246,4 +246,12 @@ bool Engine::SearchEpisodeRedirection(
   return true;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void Engine::InjectRelation(int source_id, int dest_id,
+                            std::pair<int, int> source_range,
+                            std::pair<int, int> dest_range) {
+  relations[source_id].AddRange(dest_id, source_range, dest_range);
+}
+
 }  // namespace track::recognition

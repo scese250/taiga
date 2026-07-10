@@ -32,6 +32,7 @@
 #include "taiga/resource.h"
 #include "taiga/settings.h"
 #include "taiga/version.h"
+#include "track/jikan.h"
 #include "track/recognition.h"
 #include "ui/dlg/dlg_main.h"
 #include "ui/dlg/dlg_update.h"
@@ -99,8 +100,7 @@ void UpdateHelper::Check() {
       CheckAnimeRelations();
       return;
     }
-    ui::OnUpdateNotAvailable(false);
-    ui::OnUpdateFinished();
+    CheckJikanSequelRelations(false);
   };
 
   taiga::http::Send(request, on_transfer, on_response);
@@ -118,25 +118,34 @@ void UpdateHelper::CheckAnimeRelations() {
     return OnTransfer(transfer);
   };
 
-  const auto on_response = [](const taiga::http::Response& response) {
+  const auto on_response = [this](const taiga::http::Response& response) {
     if (response.error()) {
-      ui::OnUpdateFinished();
+      CheckJikanSequelRelations(false);
       return;
     }
 
     if (Meow.ReadRelations(response.body()) &&
         SaveToFile(response.body(), GetPath(Path::DatabaseAnimeRelations))) {
       LOGD(L"Updated anime relation data.");
-      ui::OnUpdateNotAvailable(true);
+      CheckJikanSequelRelations(true);
     } else {
       Meow.ReadRelations();
       LOGD(L"Anime relation data update failed.");
-      ui::OnUpdateNotAvailable(false);
+      CheckJikanSequelRelations(false);
     }
-    ui::OnUpdateFinished();
   };
 
   taiga::http::Send(request, on_transfer, on_response);
+}
+
+void UpdateHelper::CheckJikanSequelRelations(bool relations_updated) {
+  ui::DlgUpdate.SetDlgItemText(IDC_STATIC_UPDATE_PROGRESS,
+                               L"Resolving sequel episode relations...");
+
+  track::jikan::FetchSequelRelations([relations_updated]() {
+    ui::OnUpdateNotAvailable(relations_updated);
+    ui::OnUpdateFinished();
+  });
 }
 
 bool UpdateHelper::ParseData(std::wstring data) {

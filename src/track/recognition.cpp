@@ -28,6 +28,7 @@
 #include "media/anime_util.h"
 #include "taiga/settings.h"
 #include "track/episode.h"
+#include "track/jikan.h"
 
 namespace track::recognition {
 
@@ -218,6 +219,7 @@ void Engine::InitializeTitles() {
     }
 
     ReadRelations();
+    jikan::LoadCache();
   }
 }
 

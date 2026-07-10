@@ -180,6 +180,8 @@ public:
   void SetRecognitionLookupParentDirectories(const bool enabled);
   std::wstring GetRecognitionRelationsLastModified() const;
   void SetRecognitionRelationsLastModified(const std::wstring& last_modified);
+  bool GetRecognitionAutoResolveSequels() const;
+  void SetRecognitionAutoResolveSequels(const bool enabled);
   int GetSyncUpdateDelay() const;
   void SetSyncUpdateDelay(const int seconds);
   bool GetSyncUpdateAskToConfirm() const;

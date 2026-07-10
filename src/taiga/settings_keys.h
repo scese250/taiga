@@ -79,6 +79,7 @@ enum class AppSettingKey {
   RecognitionIgnoredStrings,
   RecognitionLookupParentDirectories,
   RecognitionRelationsLastModified,
+  RecognitionAutoResolveSequels,
   SyncUpdateDelay,
   SyncUpdateAskToConfirm,
   SyncUpdateCheckPlayer,
