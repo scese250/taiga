@@ -33,4 +33,9 @@ bool LoadCache();
 // Calls on_complete when all async work is done.
 void FetchSequelRelations(std::function<void()> on_complete);
 
+// Queries Jikan API for sequel relations starting from a single anime ID.
+// Builds a sequel chain, injects synthetic rules, and updates the cache.
+// Calls on_complete when the async work is done.
+void FetchSequelRelationsForAnime(int anime_id, std::function<void()> on_complete);
+
 }  // namespace track::jikan

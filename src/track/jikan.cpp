@@ -30,6 +30,7 @@
 #include "base/string.h"
 #include "media/anime.h"
 #include "media/anime_db.h"
+#include "media/anime_util.h"
 #include "sync/service.h"
 #include "taiga/http.h"
 #include "taiga/path.h"
@@ -449,6 +450,32 @@ void FetchSequelRelations(std::function<void()> on_complete) {
 
   LOGD(L"Jikan: fetching sequel relations for {} watching anime.",
        state->watching_ids.size());
+
+  ProcessNextAnime(state);
+}
+
+void FetchSequelRelationsForAnime(int anime_id,
+                                  std::function<void()> on_complete) {
+  if (!taiga::settings.GetRecognitionAutoResolveSequels()) {
+    if (on_complete) on_complete();
+    return;
+  }
+
+  if (sync::GetCurrentServiceId() != sync::ServiceId::MyAnimeList) {
+    if (on_complete) on_complete();
+    return;
+  }
+
+  if (!anime::IsValidId(anime_id)) {
+    if (on_complete) on_complete();
+    return;
+  }
+
+  LOGD(L"Jikan: fetching sequel relations for single MAL ID {}.", anime_id);
+
+  auto state = std::make_shared<FetchState>();
+  state->on_complete = std::move(on_complete);
+  state->watching_ids.push_back(anime_id);
 
   ProcessNextAnime(state);
 }

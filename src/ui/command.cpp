@@ -40,6 +40,7 @@
 #include "taiga/announce.h"
 #include "taiga/resource.h"
 #include "taiga/settings.h"
+#include "track/jikan.h"
 #include "track/monitor.h"
 #include "track/play.h"
 #include "track/scanner.h"
@@ -732,6 +733,16 @@ void ExecuteCommand(const std::wstring& str, WPARAM wParam, LPARAM lParam) {
     ui::DlgSeason.SetViewMode(ToInt(body));
     ui::DlgSeason.RefreshList();
     ui::DlgSeason.RefreshToolbar();
+
+  // FetchJikanRelations()
+  //   Fetches sequel relations from Jikan API for the selected anime.
+  //   lParam is the anime ID.
+  } else if (command == L"FetchJikanRelations") {
+    const int anime_id = static_cast<int>(lParam);
+    ui::ChangeStatusText(L"Fetching sequel relations from Jikan...");
+    track::jikan::FetchSequelRelationsForAnime(anime_id, []() {
+      ui::ChangeStatusText(L"Sequel relations updated.");
+    });
 
   // Unknown
   } else {

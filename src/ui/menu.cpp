@@ -139,6 +139,13 @@ void MenuList::UpdateAnime(const anime::Item* anime_item) {
         break;
       }
     }
+    // Enable "Fetch sequel relations" only when using MyAnimeList
+    for (auto& item : menu->items) {
+      if (item.action == L"FetchJikanRelations()") {
+        item.enabled = sync::GetCurrentServiceId() == sync::ServiceId::MyAnimeList;
+        break;
+      }
+    }
   }
 
   // Play > Episode

@@ -122,6 +122,7 @@
 		<item type="separator"/>
 		<item name="Open folder&#9;Ctrl+O" action="OpenFolder()"/>
 		<item name="Scan available episodes&#9;F5" action="ScanEpisodes()"/>
+		<item name="Fetch sequel relations" action="FetchJikanRelations()"/>
 		<item type="separator"/>
 		<!-- Note: Overwritten -->
 		<item name="Play episode"                sub="PlayEpisode"/>
