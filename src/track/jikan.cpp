@@ -221,8 +221,15 @@ static void WalkSequelChain(std::shared_ptr<FetchState> state, int anime_id) {
 
     const auto on_response =
         [state, anime_id](const taiga::http::Response& response) {
-      if (response.error() || response.status_class() != 200) {
-        LOGW(L"Jikan: failed to get relations for MAL ID {}.", anime_id);
+      if (response.error()) {
+        LOGW(L"Jikan: network error getting relations for MAL ID {}: {}",
+             anime_id, StrToWstr(response.error().str()));
+        FinalizeChain(state);
+        return;
+      }
+      if (response.status_class() != 200) {
+        LOGW(L"Jikan: HTTP {} getting relations for MAL ID {}.",
+             response.status_code(), anime_id);
         FinalizeChain(state);
         return;
       }
@@ -281,7 +288,15 @@ static void WalkSequelChain(std::shared_ptr<FetchState> state, int anime_id) {
 
       const auto on_response =
           [state, anime_id](const taiga::http::Response& response) {
-        if (response.error() || response.status_class() != 200) {
+        if (response.error()) {
+          LOGW(L"Jikan: network error getting relations (2nd path) for MAL ID {}: {}",
+               anime_id, StrToWstr(response.error().str()));
+          FinalizeChain(state);
+          return;
+        }
+        if (response.status_class() != 200) {
+          LOGW(L"Jikan: HTTP {} getting relations (2nd path) for MAL ID {}.",
+               response.status_code(), anime_id);
           FinalizeChain(state);
           return;
         }
@@ -330,7 +345,14 @@ static void FetchEpisodeCount(std::shared_ptr<FetchState> state, int anime_id,
 
   const auto on_response =
       [on_result](const taiga::http::Response& response) {
-    if (response.error() || response.status_class() != 200) {
+    if (response.error()) {
+      LOGW(L"Jikan: network error fetching episode count for anime: {}",
+           StrToWstr(response.error().str()));
+      on_result(0);
+      return;
+    }
+    if (response.status_class() != 200) {
+      LOGW(L"Jikan: HTTP {} fetching episode count.", response.status_code());
       on_result(0);
       return;
     }
