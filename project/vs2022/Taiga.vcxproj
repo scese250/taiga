@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|ARM64">
@@ -441,6 +441,7 @@
     <ClCompile Include="..\..\src\track\media_stream.cpp" />
     <ClCompile Include="..\..\src\track\monitor.cpp" />
     <ClCompile Include="..\..\src\track\play.cpp" />
+    <ClCompile Include="..\..\src\track\jikan.cpp" />
     <ClCompile Include="..\..\src\track\recognition.cpp" />
     <ClCompile Include="..\..\src\track\recognition_normalize.cpp" />
     <ClCompile Include="..\..\src\track\recognition_relations.cpp" />
