@@ -535,7 +535,12 @@ std::wstring GetAvailableEpisodesTooltip(const anime::Item& anime_item) {
   if (!anime::IsFinishedAiring(anime_item)) {
     if (anime_item.GetNextEpisodeTime()) {
       const auto next_episode_number = anime_item.GetLastAiredEpisodeNumber() + 1;
-      const auto next_episode_time = GetAbsoluteTimeString(anime_item.GetNextEpisodeTime(), "%A %H:%M");
+      time_t next_time = anime_item.GetNextEpisodeTime();
+      time_t now = time(nullptr);
+      while (now >= next_time + 7200) {
+        next_time += 7 * 86400;
+      }
+      const auto next_episode_time = GetAbsoluteTimeString(next_time, "%A %H:%M");
       AppendString(text, L"Episode #{} airing {}"_format(next_episode_number, next_episode_time), L"\r\n");
     } else if (eps_aired_estimated > anime_item.GetMyLastWatchedEpisode()) {
       AppendString(text, L"Aired: #{} (estimated)"_format(eps_aired_estimated), L"\r\n");
@@ -631,6 +636,10 @@ void AnimeListDialog::ListView::RefreshItem(int index) {
       time_t next_time = anime_item->GetNextEpisodeTime();
       if (next_time > 0) {
         time_t adjusted = next_time + 3600;  // +1h simulcast delay
+        time_t now = time(nullptr);
+        while (now >= adjusted + 3600) {
+          adjusted += 7 * 86400;
+        }
         const std::wstring text = GetAbsoluteTimeString(adjusted, "%A, %d %B %Y %H:%M");
         update_tooltip(kTooltipNextEpisode, text.c_str(), &rect_item);
       }

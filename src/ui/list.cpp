@@ -172,6 +172,19 @@ int SortListBySeason(const anime::Item& item1, const anime::Item& item2) {
 int SortListByNextEpisode(const anime::Item& item1, const anime::Item& item2) {
   time_t time1 = item1.GetNextEpisodeTime();
   time_t time2 = item2.GetNextEpisodeTime();
+  time_t now = time(nullptr);
+  if (time1 > 0) {
+    time1 += 3600;
+    while (now >= time1 + 3600) {
+      time1 += 7 * 86400;
+    }
+  }
+  if (time2 > 0) {
+    time2 += 3600;
+    while (now >= time2 + 3600) {
+      time2 += 7 * 86400;
+    }
+  }
   // Unaired/unknown episodes to the end of the list when sorting
   if (time1 == 0 && time2 == 0) return nstd::cmp::equal;
   if (time1 == 0) return nstd::cmp::greater;

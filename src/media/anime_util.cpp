@@ -640,14 +640,6 @@ time_t CalculateNextEpisodeTimeJST(const std::string& day_of_week, const std::st
 
   int current_wday = jst_tm.tm_wday;
   int days_diff = target_wday - current_wday;
-  
-  if (days_diff < 0) {
-    days_diff += 7;
-  } else if (days_diff == 0) {
-    if (jst_tm.tm_hour > hour || (jst_tm.tm_hour == hour && jst_tm.tm_min >= minute)) {
-      days_diff += 7;
-    }
-  }
 
   struct tm target_tm = jst_tm;
   target_tm.tm_mday += days_diff;
@@ -659,7 +651,15 @@ time_t CalculateNextEpisodeTimeJST(const std::string& day_of_week, const std::st
   if (target_jst == -1)
     return 0;
 
-  return target_jst - 9 * 3600;
+  time_t broadcast_time = target_jst - 9 * 3600;
+
+  // Broadcast time + 1h simulcast delay + 1h airing window = broadcast_time + 7200
+  // Advance to next week (+7 days) if the airing window for this week has passed
+  while (now >= broadcast_time + 7200) {
+    broadcast_time += 7 * 86400;
+  }
+
+  return broadcast_time;
 }
 
 std::wstring FormatNextEpisodeCountdown(const Item& item) {
@@ -693,6 +693,13 @@ std::wstring FormatNextEpisodeCountdown(const Item& item) {
   next_time += 3600;
 
   time_t now = time(nullptr);
+
+  // If 1 hour has passed since the episode aired (including simulcast delay),
+  // advance to the next week's episode
+  while (now >= next_time + 3600) {
+    next_time += 7 * 86400;
+  }
+
   time_t diff = next_time - now;
 
   if (diff <= 0)
